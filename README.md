@@ -1,5 +1,5 @@
 # Exfil BOF 
-CS BOF used to exfil data over HTTPS via PUT request using wininet and chuncking.  
+CS BOF used to exfil data over HTTPS via PUT request using wininet and chunking.  
 
 ## BOF Usage
 ```
